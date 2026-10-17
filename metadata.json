@@ -1,0 +1,6 @@
+{
+  "name": "VaultDirectory - Secure Personal Directory & PWA",
+  "description": "A minimalist, encrypted, local-first personal directory for contacts, multiple phone numbers, bank accounts, custom labels, and activity logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
