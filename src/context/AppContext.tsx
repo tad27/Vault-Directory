@@ -73,6 +73,7 @@ interface AppContextType {
   getInteractionsForContact: (contactId: string) => InteractionLog[];
 
   // Settings & Sync
+  toggleTheme: () => Promise<void>;
   updateSettings: (newSettings: Partial<AppSettings>) => Promise<void>;
   resetToSampleData: () => Promise<void>;
   clearAllDirectoryData: () => Promise<void>;
@@ -93,12 +94,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [interactions, setInteractions] = useState<InteractionLog[]>([]);
-  const [settings, setSettingsState] = useState<AppSettings>({
-    isDarkMode: true,
-    isLockEnabled: false,
-    autoLockMinutes: 5,
-    useBiometrics: false,
-    isEncryptedStorage: false,
+  const [settings, setSettingsState] = useState<AppSettings>(() => {
+    let initialDark = true;
+    try {
+      const stored = localStorage.getItem('vault_theme');
+      if (stored !== null) initialDark = stored === 'dark';
+    } catch {}
+    return {
+      isDarkMode: initialDark,
+      isLockEnabled: false,
+      autoLockMinutes: 5,
+      useBiometrics: false,
+      isEncryptedStorage: false,
+    };
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -171,6 +179,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setInteractions(fetchedLogs);
       }
 
+      const localTheme = localStorage.getItem('vault_theme');
+      if (localTheme !== null) {
+        fetchedSettings.isDarkMode = localTheme === 'dark';
+      }
       setSettingsState(fetchedSettings);
 
       // Lock on initial boot if passcode lock enabled
@@ -190,12 +202,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isBiometricsAvailable().then(setBiometricsSupported);
   }, [refreshAllData]);
 
-  // Apply Dark Mode class to <html>
+  // Apply Dark Mode class to <html> and update theme-color meta
   useEffect(() => {
+    const root = document.documentElement;
     if (settings.isDarkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#0f172a');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#f8fafc');
     }
   }, [settings.isDarkMode]);
 
@@ -295,8 +312,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Passcode lock disabled', 'info');
   };
 
+  const toggleTheme = async () => {
+    const nextMode = !settings.isDarkMode;
+    const updated = { ...settings, isDarkMode: nextMode };
+    setSettingsState(updated);
+    try {
+      localStorage.setItem('vault_theme', nextMode ? 'dark' : 'light');
+    } catch {}
+    if (nextMode) {
+      document.documentElement.classList.add('dark');
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#0f172a');
+    } else {
+      document.documentElement.classList.remove('dark');
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#f8fafc');
+    }
+    await db.saveSettings(updated);
+    showToast(nextMode ? 'Switched to Dark Mode' : 'Switched to Light Mode', 'info');
+  };
+
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
     const updated = { ...settings, ...newSettings };
+    if (newSettings.isDarkMode !== undefined) {
+      try {
+        localStorage.setItem('vault_theme', newSettings.isDarkMode ? 'dark' : 'light');
+      } catch {}
+    }
     await db.saveSettings(updated);
     setSettingsState(updated);
     showToast('Settings saved', 'success');
@@ -668,6 +710,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getPhonesForContact,
         getBanksForContact,
         getInteractionsForContact,
+        toggleTheme,
         updateSettings,
         resetToSampleData,
         clearAllDirectoryData,

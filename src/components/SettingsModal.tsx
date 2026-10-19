@@ -16,6 +16,9 @@ import {
   Check,
   AlertTriangle,
   HardDrive,
+  Sun,
+  Moon,
+  Palette,
 } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
@@ -23,6 +26,7 @@ export const SettingsModal: React.FC = () => {
     isSettingsModalOpen,
     setIsSettingsModalOpen,
     settings,
+    toggleTheme,
     updateSettings,
     setMasterPasscode,
     disableMasterPasscode,
@@ -188,6 +192,65 @@ export const SettingsModal: React.FC = () => {
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Section: Appearance & Theme */}
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 border border-slate-200/80 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Palette className="w-4 h-4 text-indigo-500" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Appearance & Theme
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Switch between dark and light color themes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (settings.isDarkMode) toggleTheme();
+                }}
+                className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 ${
+                  !settings.isDarkMode
+                    ? 'bg-white border-indigo-500 text-indigo-600 shadow-xs ring-2 ring-indigo-500/20'
+                    : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-500 shrink-0">
+                  <Sun className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">Light Mode</p>
+                  <p className="text-[10px] text-slate-400">Crisp clean surfaces</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!settings.isDarkMode) toggleTheme();
+                }}
+                className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 ${
+                  settings.isDarkMode
+                    ? 'bg-slate-900 border-indigo-500 text-indigo-400 shadow-xs ring-2 ring-indigo-500/20'
+                    : 'bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 shrink-0">
+                  <Moon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">Dark Mode</p>
+                  <p className="text-[10px] text-slate-400">Deep slate tones</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Section 1: Passcode & Lock Screen */}
           <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 border border-slate-200/80 dark:border-slate-800 space-y-4">
             <div className="flex items-center justify-between">

@@ -23,6 +23,7 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
     searchQuery,
     setSearchQuery,
     settings,
+    toggleTheme,
     updateSettings,
     lockVault,
     setIsFormModalOpen,
@@ -51,25 +52,25 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
 
   return (
     <header className="sticky top-0 z-30 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 md:py-0 md:h-16 flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-3 md:gap-4">
         {/* Left: Brand & Mobile Toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onToggleMobileMenu}
-            className="md:hidden p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            className="md:hidden p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             aria-label="Toggle navigation"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <Shield className="w-5 h-5" />
+          <div className="flex items-center gap-2 sm:gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold tracking-tight text-slate-900 dark:text-white text-base">VaultDirectory</span>
-                <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
+                <span className="font-bold tracking-tight text-slate-900 dark:text-white text-sm sm:text-base">VaultDirectory</span>
+                <span className="hidden xs:inline-block text-[9px] sm:text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">
                   PWA
                 </span>
               </div>
@@ -79,7 +80,7 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
         </div>
 
         {/* Center: Instant Quick-Search Bar */}
-        <div className="flex-1 max-w-xl mx-2">
+        <div className="w-full md:flex-1 md:max-w-xl order-last md:order-none mx-0 md:mx-2 min-w-0">
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
               <Search className="w-4 h-4" />
@@ -89,8 +90,8 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search contacts, phones, bank accounts, branches..."
-              className="w-full pl-9 pr-9 py-2 rounded-xl text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all"
+              placeholder="Search contacts, phones, bank accounts..."
+              className="w-full pl-9 pr-9 py-2 rounded-xl text-xs sm:text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all"
             />
             {searchQuery ? (
               <button
@@ -110,17 +111,17 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto md:ml-0">
           {/* PWA Install Button */}
           <PWAInstallButton />
 
-          {/* New Contact CTA */}
+          {/* New Contact CTA - hidden on mobile since it's already a prominent floating button in the bottom navigation */}
           <button
             onClick={handleOpenNewContact}
-            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3 sm:px-3.5 py-2 text-xs font-semibold shadow-sm transition"
+            className="hidden sm:flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold shadow-xs transition shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Contact</span>
+            <span className="hidden md:inline">Add Contact</span>
           </button>
 
           {/* Lock Vault Button if configured */}
@@ -128,7 +129,7 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
             <button
               onClick={lockVault}
               title="Lock Vault Now"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shrink-0"
             >
               <Lock className="w-4 h-4 text-amber-500" />
             </button>
@@ -136,18 +137,19 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
 
           {/* Dark / Light Mode Toggle */}
           <button
-            onClick={() => updateSettings({ isDarkMode: !settings.isDarkMode })}
+            onClick={toggleTheme}
             title={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shrink-0"
+            aria-label={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {settings.isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
           </button>
 
-          {/* Settings / Security */}
+          {/* Settings / Security - hidden on mobile since it is prominently located in the bottom nav */}
           <button
             onClick={() => setIsSettingsModalOpen(true)}
             title="Settings & Security"
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95"
+            className="hidden sm:flex p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shrink-0"
           >
             <Sliders className="w-4 h-4" />
           </button>
