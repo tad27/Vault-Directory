@@ -5,6 +5,29 @@
 html {
   overflow-x: hidden;
   max-width: 100vw;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior-y: none;
+}
+
+/* Prevent iOS Safari from auto-zooming in when focusing inputs */
+@media screen and (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 @layer base {
@@ -14,7 +37,7 @@ html {
     max-width: 100vw;
   }
 
-  /* Custom scrollbar */
+  /* Custom subtle scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -23,14 +46,217 @@ html {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.4);
+    background: rgba(148, 163, 184, 0.25);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.6);
+    background: rgba(148, 163, 184, 0.45);
   }
 }
 
+/* ================= MULTI-THEME COLOR PALETTES ================= */
+:root,
+html[data-theme-color="indigo"] {
+  --theme-primary: #6366f1;
+  --theme-primary-hover: #4f46e5;
+  --theme-gradient-from: #6366f1;
+  --theme-gradient-to: #4f46e5;
+  --theme-glow: rgba(99, 102, 241, 0.28);
+  --theme-subtle: rgba(99, 102, 241, 0.1);
+  --theme-border: rgba(99, 102, 241, 0.35);
+  --theme-ring: rgba(99, 102, 241, 0.4);
+  --theme-text-light: #4338ca;
+  --theme-text-dark: #a5b4fc;
+}
+
+html[data-theme-color="emerald"] {
+  --theme-primary: #10b981;
+  --theme-primary-hover: #059669;
+  --theme-gradient-from: #10b981;
+  --theme-gradient-to: #059669;
+  --theme-glow: rgba(16, 185, 129, 0.28);
+  --theme-subtle: rgba(16, 185, 129, 0.1);
+  --theme-border: rgba(16, 185, 129, 0.35);
+  --theme-ring: rgba(16, 185, 129, 0.4);
+  --theme-text-light: #047857;
+  --theme-text-dark: #6ee7b7;
+}
+
+html[data-theme-color="ocean"] {
+  --theme-primary: #0284c7;
+  --theme-primary-hover: #0369a1;
+  --theme-gradient-from: #0284c7;
+  --theme-gradient-to: #2563eb;
+  --theme-glow: rgba(2, 132, 199, 0.28);
+  --theme-subtle: rgba(2, 132, 199, 0.1);
+  --theme-border: rgba(2, 132, 199, 0.35);
+  --theme-ring: rgba(2, 132, 199, 0.4);
+  --theme-text-light: #0369a1;
+  --theme-text-dark: #38bdf8;
+}
+
+html[data-theme-color="amber"] {
+  --theme-primary: #f59e0b;
+  --theme-primary-hover: #d97706;
+  --theme-gradient-from: #f59e0b;
+  --theme-gradient-to: #ea580c;
+  --theme-glow: rgba(245, 158, 11, 0.28);
+  --theme-subtle: rgba(245, 158, 11, 0.1);
+  --theme-border: rgba(245, 158, 11, 0.35);
+  --theme-ring: rgba(245, 158, 11, 0.4);
+  --theme-text-light: #b45309;
+  --theme-text-dark: #fcd34d;
+}
+
+html[data-theme-color="rose"] {
+  --theme-primary: #f43f5e;
+  --theme-primary-hover: #e11d48;
+  --theme-gradient-from: #f43f5e;
+  --theme-gradient-to: #be123c;
+  --theme-glow: rgba(244, 63, 94, 0.28);
+  --theme-subtle: rgba(244, 63, 94, 0.1);
+  --theme-border: rgba(244, 63, 94, 0.35);
+  --theme-ring: rgba(244, 63, 94, 0.4);
+  --theme-text-light: #be123c;
+  --theme-text-dark: #fda4af;
+}
+
+html[data-theme-color="purple"] {
+  --theme-primary: #8b5cf6;
+  --theme-primary-hover: #7c3aed;
+  --theme-gradient-from: #8b5cf6;
+  --theme-gradient-to: #c026d3;
+  --theme-glow: rgba(139, 92, 246, 0.28);
+  --theme-subtle: rgba(139, 92, 246, 0.1);
+  --theme-border: rgba(139, 92, 246, 0.35);
+  --theme-ring: rgba(139, 92, 246, 0.4);
+  --theme-text-light: #6d28d9;
+  --theme-text-dark: #c4b5fd;
+}
+
+html[data-theme-color="slate"] {
+  --theme-primary: #64748b;
+  --theme-primary-hover: #475569;
+  --theme-gradient-from: #64748b;
+  --theme-gradient-to: #334155;
+  --theme-glow: rgba(100, 116, 139, 0.28);
+  --theme-subtle: rgba(100, 116, 139, 0.1);
+  --theme-border: rgba(100, 116, 139, 0.35);
+  --theme-ring: rgba(100, 116, 139, 0.4);
+  --theme-text-light: #334155;
+  --theme-text-dark: #cbd5e1;
+}
+
+/* Dynamic theme helper utility classes */
+.bg-theme-primary {
+  background-color: var(--theme-primary) !important;
+}
+.hover\:bg-theme-primary-hover:hover {
+  background-color: var(--theme-primary-hover) !important;
+}
+.bg-theme-gradient {
+  background: linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to)) !important;
+}
+.text-theme-primary {
+  color: var(--theme-primary) !important;
+}
+.text-theme-accent {
+  color: var(--theme-text-light);
+}
+html.dark .text-theme-accent {
+  color: var(--theme-text-dark);
+}
+.border-theme-primary {
+  border-color: var(--theme-border) !important;
+}
+.bg-theme-subtle {
+  background-color: var(--theme-subtle) !important;
+}
+.shadow-theme-glow {
+  box-shadow: 0 10px 25px -5px var(--theme-glow) !important;
+}
+.ring-theme-primary:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--theme-ring) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--theme-border) !important;
+  --tw-ring-color: var(--theme-ring) !important;
+}
+
+::selection {
+  background-color: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Safe area insets for iPhone notch, Dynamic Island, and home indicator */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 .font-mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Hide scrollbar for clean horizontal tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* View Transitions API configuration for seamless theme morph */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth universal theme transition class during switch */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              fill 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              stroke 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition-delay: 0s !important;
+}
+
+/* Aceternity UI Shimmer & Border Beam Animations */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.2s infinite;
 }

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView } from '../types';
+import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView, ThemeColor } from '../types';
 import * as db from '../services/db';
 import { SEED_CONTACTS, SEED_PHONES, SEED_BANKS, SEED_FOLDERS, SEED_INTERACTIONS } from '../services/seedData';
 import { hashPasscode, generateSalt, encryptObject, decryptObject, type EncryptedPayload } from '../services/crypto';
 import { verifyBiometricCredential, isBiometricsAvailable } from '../services/webauthn';
+import { applyThemeSmoothly } from '../lib/theme';
 
 interface ToastInfo {
   id: string;
@@ -74,6 +75,7 @@ interface AppContextType {
 
   // Settings & Sync
   toggleTheme: () => Promise<void>;
+  setThemeColor: (color: ThemeColor) => Promise<void>;
   updateSettings: (newSettings: Partial<AppSettings>) => Promise<void>;
   resetToSampleData: () => Promise<void>;
   clearAllDirectoryData: () => Promise<void>;
@@ -96,12 +98,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [interactions, setInteractions] = useState<InteractionLog[]>([]);
   const [settings, setSettingsState] = useState<AppSettings>(() => {
     let initialDark = true;
+    let initialColor: ThemeColor = 'indigo';
     try {
       const stored = localStorage.getItem('vault_theme');
       if (stored !== null) initialDark = stored === 'dark';
+      const storedColor = localStorage.getItem('vault_theme_color') as ThemeColor | null;
+      if (storedColor) initialColor = storedColor;
     } catch {}
     return {
       isDarkMode: initialDark,
+      themeColor: initialColor,
       isLockEnabled: false,
       autoLockMinutes: 5,
       useBiometrics: false,
@@ -202,19 +208,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isBiometricsAvailable().then(setBiometricsSupported);
   }, [refreshAllData]);
 
-  // Apply Dark Mode class to <html> and update theme-color meta
+  // Apply Dark Mode class to <html> and update theme-color meta & color palette smoothly
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.isDarkMode) {
-      root.classList.add('dark');
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', '#0f172a');
-    } else {
-      root.classList.remove('dark');
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', '#f8fafc');
-    }
-  }, [settings.isDarkMode]);
+    applyThemeSmoothly(settings.isDarkMode, settings.themeColor);
+  }, [settings.isDarkMode, settings.themeColor]);
 
   // Auto-lock on blur or timer if enabled
   useEffect(() => {
@@ -315,29 +312,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const toggleTheme = async () => {
     const nextMode = !settings.isDarkMode;
     const updated = { ...settings, isDarkMode: nextMode };
-    setSettingsState(updated);
     try {
       localStorage.setItem('vault_theme', nextMode ? 'dark' : 'light');
     } catch {}
-    if (nextMode) {
-      document.documentElement.classList.add('dark');
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', '#0f172a');
-    } else {
-      document.documentElement.classList.remove('dark');
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', '#f8fafc');
-    }
+    applyThemeSmoothly(nextMode, settings.themeColor);
+    setSettingsState(updated);
     await db.saveSettings(updated);
-    showToast(nextMode ? 'Switched to Dark Mode' : 'Switched to Light Mode', 'info');
+  };
+
+  const setThemeColor = async (color: ThemeColor) => {
+    const updated = { ...settings, themeColor: color };
+    try {
+      localStorage.setItem('vault_theme_color', color);
+    } catch {}
+    applyThemeSmoothly(settings.isDarkMode, color);
+    setSettingsState(updated);
+    await db.saveSettings(updated);
   };
 
   const updateSettings = async (newSettings: Partial<AppSettings>) => {
     const updated = { ...settings, ...newSettings };
-    if (newSettings.isDarkMode !== undefined) {
-      try {
-        localStorage.setItem('vault_theme', newSettings.isDarkMode ? 'dark' : 'light');
-      } catch {}
+    if (newSettings.isDarkMode !== undefined || newSettings.themeColor !== undefined) {
+      const isDark = newSettings.isDarkMode !== undefined ? newSettings.isDarkMode : settings.isDarkMode;
+      const color = newSettings.themeColor !== undefined ? newSettings.themeColor : settings.themeColor;
+      if (newSettings.isDarkMode !== undefined) {
+        try {
+          localStorage.setItem('vault_theme', isDark ? 'dark' : 'light');
+        } catch {}
+      }
+      if (newSettings.themeColor !== undefined) {
+        try {
+          localStorage.setItem('vault_theme_color', color);
+        } catch {}
+      }
+      applyThemeSmoothly(isDark, color);
     }
     await db.saveSettings(updated);
     setSettingsState(updated);
@@ -559,7 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Relationship match
       if (c.relationship?.toLowerCase().includes(q)) return true;
       // Notes match
-      if (c.notes.toLowerCase().includes(q)) return true;
+      if (c.notes?.toLowerCase().includes(q)) return true;
 
       // Phone numbers match
       const cPhones = phoneNumbers.filter(p => p.contactId === c.id);
@@ -711,6 +719,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getBanksForContact,
         getInteractionsForContact,
         toggleTheme,
+        setThemeColor,
         updateSettings,
         resetToSampleData,
         clearAllDirectoryData,

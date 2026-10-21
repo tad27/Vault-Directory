@@ -2,6 +2,8 @@ import React from 'react';
 import type { Contact } from '../types';
 import { useApp } from '../context/AppContext';
 import { SearchHighlight } from './SearchHighlight';
+import { CardSpotlight } from './ui/aceternity';
+import { Badge } from './ui/badge';
 import {
   Star,
   Phone,
@@ -35,13 +37,14 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
   const primaryPhone = phones.find(p => p.isPrimary) || phones[0];
   const primaryBank = banks[0];
 
-  const initials = contact.name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(w => w[0])
-    .join('')
-    .toUpperCase() || '?';
+  const initials =
+    contact.name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(w => w[0])
+      .join('')
+      .toUpperCase() || '?';
 
   // Format relative timestamp
   const getRelativeTime = (timestamp?: number) => {
@@ -55,67 +58,72 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
     return `${diffDays}d ago`;
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Avoid clicking if clicking action buttons
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Avoid opening detail if user clicked an action button
     if ((e.target as HTMLElement).closest('button')) return;
     setSelectedContactId(contact.id);
   };
 
   return (
-    <div
+    <CardSpotlight
       onClick={handleCardClick}
-      className="group relative rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-400 dark:hover:border-indigo-500/50 p-5 shadow-xs hover:shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between"
+      className="p-4 sm:p-5 flex flex-col justify-between cursor-pointer active:scale-[0.99] transition-transform select-none"
     >
       <div>
-        {/* Header: Avatar, Name, Relationship, Star */}
+        {/* Header: Avatar, Name, Relationship, Folder & Star */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {contact.avatarUrl ? (
               <img
                 src={contact.avatarUrl}
                 alt={contact.name}
-                className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-xs"
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 shadow-xs shrink-0"
               />
             ) : (
               <div
-                className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr ${
                   contact.avatarColor || 'from-indigo-500 to-purple-600'
-                } flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0`}
+                } flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-xs shrink-0`}
               >
                 {initials}
               </div>
             )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-slate-900 dark:text-white text-base leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  <SearchHighlight text={contact.name} query={searchQuery} />
-                </h3>
-              </div>
-              {contact.relationship && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-slate-900 dark:text-white text-sm sm:text-base leading-snug group-hover:text-theme-primary transition-colors truncate">
+                <SearchHighlight text={contact.name} query={searchQuery} />
+              </h3>
+              {contact.relationship ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                   <SearchHighlight text={contact.relationship} query={searchQuery} />
                 </p>
-              )}
+              ) : folder ? (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: folder.color }} />
+                  <span className="truncate">{folder.name}</span>
+                </span>
+              ) : null}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {folder && (
+          <div className="flex items-center gap-1 shrink-0">
+            {folder && contact.relationship && (
               <span
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-800/80"
+                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200/80 dark:border-slate-800"
                 style={{
                   backgroundColor: `${folder.color}15`,
                   color: folder.color,
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: folder.color }} />
-                {folder.name}
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: folder.color }} />
+                <span>{folder.name}</span>
               </span>
             )}
             <button
+              type="button"
               onClick={() => toggleFavorite(contact.id)}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              title={contact.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-xl text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-90"
+              title={contact.isFavorite ? 'Remove star' : 'Star favorite'}
+              aria-label={contact.isFavorite ? 'Remove star' : 'Star favorite'}
             >
               <Star
                 className={`w-4 h-4 ${
@@ -126,16 +134,18 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
           </div>
         </div>
 
-        {/* Primary Phone Number Item */}
+        {/* Primary Phone Item */}
         {primaryPhone ? (
-          <div className="mt-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-2.5 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+          <div className="mt-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-2.5 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Phone className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-              <div className="truncate text-xs">
-                <span className="text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500 mr-1.5">
+              <div className="w-6 h-6 rounded-lg bg-theme-subtle flex items-center justify-center shrink-0">
+                <Phone className="w-3.5 h-3.5 text-theme-primary" />
+              </div>
+              <div className="truncate text-xs min-w-0">
+                <span className="text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500 mr-1.5 shrink-0">
                   {primaryPhone.label}
                 </span>
-                <span className="font-mono text-slate-800 dark:text-slate-200">
+                <span className="font-mono text-slate-800 dark:text-slate-200 truncate">
                   <SearchHighlight text={primaryPhone.number} query={searchQuery} />
                 </span>
               </div>
@@ -143,16 +153,20 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
 
             <div className="flex items-center gap-1 shrink-0">
               <button
+                type="button"
                 onClick={() => copyToClipboard(primaryPhone.number, `${primaryPhone.label} number`, contact.id)}
-                className="p-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-700 transition"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-theme-primary hover:bg-white dark:hover:bg-slate-700 transition active:scale-90"
                 title="Copy phone number"
+                aria-label="Copy phone number"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
               <button
+                type="button"
                 onClick={() => triggerPhoneCall(primaryPhone, contact)}
-                className="p-1 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition active:scale-90"
                 title="Call now"
+                aria-label="Call phone number"
               >
                 <PhoneCall className="w-3.5 h-3.5" />
               </button>
@@ -162,16 +176,18 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
           <div className="mt-3 text-xs text-slate-400 italic">No phone numbers</div>
         )}
 
-        {/* Primary Bank Account Item */}
+        {/* Primary Bank Item */}
         {primaryBank && (
-          <div className="mt-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 p-2.5 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+          <div className="mt-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-2.5 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Landmark className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              <div className="truncate text-xs">
-                <span className="text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500 mr-1.5">
+              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center shrink-0">
+                <Landmark className="w-3.5 h-3.5 text-emerald-500" />
+              </div>
+              <div className="truncate text-xs min-w-0">
+                <span className="text-[10px] font-semibold uppercase text-slate-400 dark:text-slate-500 mr-1.5 shrink-0">
                   {primaryBank.bankName}
                 </span>
-                <span className="font-mono text-slate-700 dark:text-slate-300">
+                <span className="font-mono text-slate-700 dark:text-slate-300 truncate">
                   <SearchHighlight
                     text={
                       primaryBank.accountNumber.length > 8
@@ -185,9 +201,11 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
             </div>
 
             <button
+              type="button"
               onClick={() => copyToClipboard(primaryBank.accountNumber, `${primaryBank.bankName} account`, contact.id, true)}
-              className="p-1 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition shrink-0"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-white dark:hover:bg-slate-700 transition shrink-0 active:scale-90"
               title="Copy account number"
+              aria-label="Copy account number"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
@@ -197,30 +215,30 @@ export const ContactCard: React.FC<Props> = ({ contact }) => {
 
       {/* Footer: Multi-item pill counters & Last activity */}
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {phones.length > 1 && (
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <Badge variant="secondary" className="text-[10px] py-0 px-2">
               {phones.length} phones
-            </span>
+            </Badge>
           )}
           {banks.length > 1 && (
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            <Badge variant="secondary" className="text-[10px] py-0 px-2">
               {banks.length} banks
-            </span>
+            </Badge>
           )}
           {contact.lastInteractedAt && (
-            <span className="inline-flex items-center gap-1">
-              <Clock className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1 font-medium text-[11px]">
+              <Clock className="w-3 h-3 text-slate-400" />
               {getRelativeTime(contact.lastInteractedAt)}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-slate-400 group-hover:text-indigo-500 transition-colors">
+        <div className="flex items-center gap-1 text-slate-400 group-hover:text-indigo-500 transition-colors font-medium text-xs">
           <span>Details</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </div>
       </div>
-    </div>
+    </CardSpotlight>
   );
 };

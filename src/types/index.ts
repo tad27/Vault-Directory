@@ -29,8 +29,8 @@ export interface Folder {
 export interface Contact {
   id: string;
   name: string;
-  relationship?: string; // e.g. "Mom", "Brother", "Coworker", "Best Friend"
-  notes: string;
+  relationship?: string;
+  notes?: string;
   avatarUrl?: string;
   avatarColor?: string;
   isFavorite: boolean;
@@ -51,8 +51,11 @@ export interface InteractionLog {
   notes: string;
 }
 
+export type ThemeColor = 'indigo' | 'emerald' | 'ocean' | 'amber' | 'rose' | 'purple' | 'slate';
+
 export interface AppSettings {
   isDarkMode: boolean;
+  themeColor: ThemeColor;
   isLockEnabled: boolean;
   passcodeHash?: string; // Salted hash for verification
   passcodeSalt?: string;

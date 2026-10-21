@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { ThemeColorPicker } from './ThemeColorPicker';
 import {
   Users,
   Star,
@@ -12,6 +13,7 @@ import {
   HardDrive,
   Lock,
   ChevronRight,
+  Palette,
 } from 'lucide-react';
 
 interface Props {
@@ -64,7 +66,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('all')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'all' && !activeFolderId
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -75,7 +77,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               <span
                 className={`text-[11px] px-2 py-0.5 rounded-full ${
                   activeFilter === 'all' && !activeFolderId
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-black/20 text-white'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -87,7 +89,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('favorites')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'favorites'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -98,7 +100,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               <span
                 className={`text-[11px] px-2 py-0.5 rounded-full ${
                   activeFilter === 'favorites'
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-black/20 text-white'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -110,7 +112,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('recents')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'recents'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -121,7 +123,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               <span
                 className={`text-[11px] px-2 py-0.5 rounded-full ${
                   activeFilter === 'recents'
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-black/20 text-white'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -133,7 +135,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('most_used')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'most_used'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -144,7 +146,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               <span
                 className={`text-[11px] px-2 py-0.5 rounded-full ${
                   activeFilter === 'most_used'
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-black/20 text-white'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -178,7 +180,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
                   onClick={() => handleSelectFolder(f.id)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                     isSelected
-                      ? 'bg-indigo-600 text-white shadow-sm'
+                      ? 'bg-theme-primary text-white shadow-sm'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -192,7 +194,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
                   <span
                     className={`text-[11px] px-1.5 py-0.5 rounded-full ${
                       isSelected
-                        ? 'bg-indigo-700/60 text-white'
+                        ? 'bg-black/20 text-white'
                         : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
                     }`}
                   >
@@ -218,7 +220,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('activity')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'activity'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -229,7 +231,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               <span
                 className={`text-[11px] px-2 py-0.5 rounded-full ${
                   activeFilter === 'activity'
-                    ? 'bg-indigo-700/60 text-white'
+                    ? 'bg-black/20 text-white'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -241,7 +243,7 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
               onClick={() => handleSelectFilter('analytics')}
               className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'analytics'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-theme-primary text-white shadow-sm'
                   : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800'
               }`}
             >
@@ -255,11 +257,24 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
         </div>
       </div>
 
+      {/* Mobile Drawer Quick Theme Color Palette */}
+      {isMobile && (
+        <div className="py-2.5 px-1 border-t border-slate-200/80 dark:border-slate-800/80">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Palette className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              Theme Accent
+            </span>
+          </div>
+          <ThemeColorPicker variant="inline" />
+        </div>
+      )}
+
       {/* Storage & Privacy Status Footer */}
-      <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80">
+      <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
         <div className="rounded-xl bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200/60 dark:border-slate-800">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
-            <HardDrive className="w-3.5 h-3.5 text-indigo-500" />
+            <HardDrive className="w-3.5 h-3.5 text-theme-primary" />
             <span>IndexedDB Active</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>VaultDirectory - Secure Personal Directory & PWA</title>
     <meta name="description" content="A minimalist, encrypted, local-first personal directory for contacts, multiple phone numbers, bank accounts, custom labels, and activity logs." />
     <meta property="og:title" content="VaultDirectory - Secure Personal Directory & PWA" />
@@ -28,14 +28,18 @@
           var isDark = saved !== null ? saved === 'dark' : true;
           if (isDark) {
             document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
           } else {
             document.documentElement.classList.remove('dark');
+            document.documentElement.style.colorScheme = 'light';
           }
+          var savedColor = localStorage.getItem('vault_theme_color') || 'indigo';
+          document.documentElement.setAttribute('data-theme-color', savedColor);
         } catch (e) {}
       })();
     </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+  <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-300 ease-out">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

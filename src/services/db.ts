@@ -276,10 +276,14 @@ export async function getSettings(): Promise<AppSettings> {
   const db = await getDB();
   const res = await db.get('settings', 'app_settings');
   if (res && res.data) {
-    return res.data;
+    return {
+      ...res.data,
+      themeColor: res.data.themeColor || 'indigo',
+    };
   }
   return {
     isDarkMode: true,
+    themeColor: 'indigo',
     isLockEnabled: false,
     autoLockMinutes: 5,
     useBiometrics: false,
