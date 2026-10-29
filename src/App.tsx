@@ -7,6 +7,7 @@ import { ContactDetailModal } from './components/ContactDetailModal';
 import { ContactFormModal } from './components/ContactFormModal';
 import { FolderModal } from './components/FolderModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ContactFilterModal } from './components/ContactFilterModal';
 import { LockScreen } from './components/LockScreen';
 import { Toast } from './components/Toast';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -170,6 +171,7 @@ const AppContent: React.FC = () => {
       <ContactFormModal />
       <FolderModal />
       <SettingsModal />
+      <ContactFilterModal />
       <Toast />
       <OfflineIndicator />
     </BackgroundGrid>

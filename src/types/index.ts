@@ -65,3 +65,23 @@ export interface AppSettings {
 }
 
 export type FilterView = 'all' | 'favorites' | 'recents' | 'most_used' | 'folder' | 'activity' | 'analytics' | 'settings';
+
+export interface ContactFilterOptions {
+  folderId: string | null; // null for any, 'none' for unlabeled, or folder ID
+  relationship: string | null; // null for any, or specific relationship
+  favoritesOnly: boolean;
+  hasBank: boolean;
+  hasPhone: boolean;
+  hasNotes: boolean;
+  sortBy: 'name-asc' | 'name-desc' | 'recent' | 'newest' | 'interactions';
+}
+
+export const DEFAULT_FILTER_OPTIONS: ContactFilterOptions = {
+  folderId: null,
+  relationship: null,
+  favoritesOnly: false,
+  hasBank: false,
+  hasPhone: false,
+  hasNotes: false,
+  sortBy: 'name-asc',
+};

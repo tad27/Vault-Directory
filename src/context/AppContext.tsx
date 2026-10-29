@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView, ThemeColor } from '../types';
+import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView, ThemeColor, ContactFilterOptions } from '../types';
+import { DEFAULT_FILTER_OPTIONS } from '../types';
 import * as db from '../services/db';
 import { SEED_CONTACTS, SEED_PHONES, SEED_BANKS, SEED_FOLDERS, SEED_INTERACTIONS } from '../services/seedData';
 import { hashPasscode, generateSalt, encryptObject, decryptObject, type EncryptedPayload } from '../services/crypto';
@@ -41,6 +42,16 @@ interface AppContextType {
   setIsFolderModalOpen: (open: boolean) => void;
   isSettingsModalOpen: boolean;
   setIsSettingsModalOpen: (open: boolean) => void;
+  isFilterModalOpen: boolean;
+  setIsFilterModalOpen: (open: boolean) => void;
+
+  // Granular Multi-Criteria Filter State
+  filterOptions: ContactFilterOptions;
+  setFilterOptions: React.Dispatch<React.SetStateAction<ContactFilterOptions>>;
+  updateFilterOptions: (partial: Partial<ContactFilterOptions>) => void;
+  resetFilterOptions: () => void;
+  activeFilterCount: number;
+  allRelationships: string[];
 
   // Security & Lock
   isLocked: boolean;
@@ -130,6 +141,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [contactToEdit, setContactToEdit] = useState<Contact | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  // Granular Filter state
+  const [filterOptions, setFilterOptions] = useState<ContactFilterOptions>(DEFAULT_FILTER_OPTIONS);
+
+  const updateFilterOptions = useCallback((partial: Partial<ContactFilterOptions>) => {
+    setFilterOptions(prev => ({ ...prev, ...partial }));
+  }, []);
+
+  const resetFilterOptions = useCallback(() => {
+    setFilterOptions(DEFAULT_FILTER_OPTIONS);
+  }, []);
+
+  // Compute active filter count
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filterOptions.folderId !== null) count++;
+    if (filterOptions.relationship !== null) count++;
+    if (filterOptions.favoritesOnly) count++;
+    if (filterOptions.hasBank) count++;
+    if (filterOptions.hasPhone) count++;
+    if (filterOptions.hasNotes) count++;
+    if (filterOptions.sortBy !== 'name-asc') count++;
+    return count;
+  }, [filterOptions]);
+
+  // Extract all distinct relationships
+  const allRelationships = useMemo(() => {
+    const relSet = new Set<string>();
+    ['Family', 'Friend', 'Work', 'Colleague', 'Manager', 'Client', 'Partner', 'Doctor', 'Accountant', 'VIP'].forEach(r => relSet.add(r));
+    for (const c of contacts) {
+      if (c.relationship && c.relationship.trim()) {
+        relSet.add(c.relationship.trim());
+      }
+    }
+    return Array.from(relSet).sort((a, b) => a.localeCompare(b));
+  }, [contacts]);
 
   // Toast
   const [toast, setToast] = useState<ToastInfo | null>(null);
@@ -557,7 +605,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       result = result.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // 2. Search query filter
+    // 2. Granular Multi-Criteria Filter Options
+    if (filterOptions.folderId !== null) {
+      if (filterOptions.folderId === 'none') {
+        result = result.filter(c => !c.folderId);
+      } else {
+        result = result.filter(c => c.folderId === filterOptions.folderId);
+      }
+    }
+
+    if (filterOptions.relationship !== null) {
+      result = result.filter(c => c.relationship?.toLowerCase() === filterOptions.relationship!.toLowerCase());
+    }
+
+    if (filterOptions.favoritesOnly) {
+      result = result.filter(c => c.isFavorite);
+    }
+
+    if (filterOptions.hasBank) {
+      const contactIdsWithBank = new Set(bankAccounts.map(b => b.contactId));
+      result = result.filter(c => contactIdsWithBank.has(c.id));
+    }
+
+    if (filterOptions.hasPhone) {
+      const contactIdsWithPhone = new Set(phoneNumbers.map(p => p.contactId));
+      result = result.filter(c => contactIdsWithPhone.has(c.id));
+    }
+
+    if (filterOptions.hasNotes) {
+      result = result.filter(c => Boolean(c.notes && c.notes.trim().length > 0));
+    }
+
+    // Sort order according to filterOptions.sortBy
+    if (filterOptions.sortBy === 'name-desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (filterOptions.sortBy === 'recent') {
+      result.sort((a, b) => (b.lastInteractedAt || b.updatedAt || 0) - (a.lastInteractedAt || a.updatedAt || 0));
+    } else if (filterOptions.sortBy === 'newest') {
+      result.sort((a, b) => b.createdAt - a.createdAt);
+    } else if (filterOptions.sortBy === 'interactions') {
+      result.sort((a, b) => {
+        const countA = interactionCountMap.get(a.id) || 0;
+        const countB = interactionCountMap.get(b.id) || 0;
+        return countB - countA;
+      });
+    }
+
+    // 3. Search query filter
     const q = searchQuery.trim().toLowerCase();
     if (!q) return result;
 
@@ -592,7 +686,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       return false;
     });
-  }, [contacts, phoneNumbers, bankAccounts, folders, activeFilter, activeFolderId, searchQuery, interactionCountMap]);
+  }, [contacts, phoneNumbers, bankAccounts, folders, activeFilter, activeFolderId, searchQuery, interactionCountMap, filterOptions]);
 
   // Reset to Sample Data
   const resetToSampleData = async () => {
@@ -699,6 +793,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsFolderModalOpen,
         isSettingsModalOpen,
         setIsSettingsModalOpen,
+        isFilterModalOpen,
+        setIsFilterModalOpen,
+        filterOptions,
+        setFilterOptions,
+        updateFilterOptions,
+        resetFilterOptions,
+        activeFilterCount,
+        allRelationships,
         isLocked,
         unlockWithPasscode,
         unlockWithBiometrics,

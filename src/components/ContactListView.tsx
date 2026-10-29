@@ -3,22 +3,17 @@ import { useApp } from '../context/AppContext';
 import { ContactCard } from './ContactCard';
 import { ActivityLogView } from './ActivityLogView';
 import { AnalyticsView } from './AnalyticsView';
-import { AnimatedSegmentedTabs } from './ui/aceternity';
 import { Button } from './ui/button';
 import {
-  Users,
-  Star,
-  Clock,
-  Zap,
   Plus,
   Search,
   X,
   UserX,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export const ContactListView: React.FC = () => {
   const {
-    contacts,
     filteredContacts,
     activeFilter,
     setActiveFilter,
@@ -29,6 +24,11 @@ export const ContactListView: React.FC = () => {
     setSearchQuery,
     setIsFormModalOpen,
     setContactToEdit,
+    setIsFilterModalOpen,
+    filterOptions,
+    updateFilterOptions,
+    resetFilterOptions,
+    activeFilterCount,
   } = useApp();
 
   if (activeFilter === 'activity') {
@@ -39,67 +39,8 @@ export const ContactListView: React.FC = () => {
     return <AnalyticsView />;
   }
 
-  const favoritesCount = contacts.filter(c => c.isFavorite).length;
-  const recentCount = contacts.filter(c => c.lastInteractedAt || c.updatedAt).length;
-
-  // Segmented tabs definition
-  const smartTabs = [
-    { id: 'all', label: 'All', icon: <Users className="w-3.5 h-3.5" />, count: contacts.length },
-    { id: 'favorites', label: 'Favorites', icon: <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />, count: favoritesCount },
-    { id: 'recents', label: 'Recent', icon: <Clock className="w-3.5 h-3.5 text-sky-500" />, count: recentCount },
-    { id: 'most_used', label: 'Frequent', icon: <Zap className="w-3.5 h-3.5 text-amber-500" /> },
-  ];
-
-  const handleTabChange = (tabId: string) => {
-    setActiveFilter(tabId as typeof activeFilter);
-    setActiveFolderId(null);
-  };
-
-  // Determine current view title & icon
+  // Determine current view folder if active
   const currentFolder = folders.find(f => f.id === activeFolderId);
-
-  const getViewDetails = () => {
-    if (activeFilter === 'folder' && currentFolder) {
-      return {
-        title: currentFolder.name,
-        subtitle: currentFolder.description || 'Custom labeled contacts',
-        icon: (
-          <span
-            className="w-3.5 h-3.5 rounded-full inline-block mr-1"
-            style={{ backgroundColor: currentFolder.color }}
-          />
-        ),
-      };
-    }
-    if (activeFilter === 'favorites') {
-      return {
-        title: 'Favorites & VIPs',
-        subtitle: 'Pinned top contacts for instantaneous calling and banking',
-        icon: <Star className="w-5 h-5 text-amber-500 fill-amber-500" />,
-      };
-    }
-    if (activeFilter === 'recents') {
-      return {
-        title: 'Recently Active',
-        subtitle: 'Sorted by latest outbound calls, copied details, or updates',
-        icon: <Clock className="w-5 h-5 text-sky-500" />,
-      };
-    }
-    if (activeFilter === 'most_used') {
-      return {
-        title: 'Most Contacted',
-        subtitle: 'Frequency-ranked contacts based on interactions & copies',
-        icon: <Zap className="w-5 h-5 text-amber-500" />,
-      };
-    }
-    return {
-      title: 'Directory',
-      subtitle: 'Encrypted personal directory with multiple numbers and banks',
-      icon: <Users className="w-5 h-5 text-theme-primary" />,
-    };
-  };
-
-  const { title, subtitle, icon } = getViewDetails();
 
   const handleAddNew = () => {
     setContactToEdit(null);
@@ -108,44 +49,36 @@ export const ContactListView: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Top Bar with Smart Tabs & New Contact */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            {icon}
-            <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {title}
-            </h1>
-            <span className="text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              {filteredContacts.length}
+
+      {/* Mobile Filter Trigger Button & Active Summary */}
+      <div className="flex md:hidden items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setIsFilterModalOpen(true)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs active:scale-95 transition ${
+            activeFilterCount > 0
+              ? 'bg-theme-subtle border-theme-primary text-theme-primary ring-2 ring-theme-primary/20'
+              : 'bg-white/90 dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
+          }`}
+          aria-label="Filter contacts by labels and relationships"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5 text-theme-primary" />
+          <span>Filters</span>
+          {activeFilterCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-theme-primary text-white text-[10px] font-bold">
+              {activeFilterCount}
             </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
-        </div>
+          )}
+        </button>
 
-        {/* Quick Tabs Control */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-          <AnimatedSegmentedTabs
-            tabs={smartTabs}
-            activeTab={activeFilter === 'folder' ? '' : activeFilter}
-            onTabChange={handleTabChange}
-          />
-
-          <Button
-            onClick={handleAddNew}
-            size="sm"
-            variant="shimmer"
-            className="hidden sm:inline-flex shrink-0 shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Contact</span>
-          </Button>
-        </div>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'}
+        </span>
       </div>
 
-      {/* Quick Folder / Label Filter Chips for instantaneous filtering */}
+      {/* Quick Folder / Label Filter Chips for instantaneous filtering (Hidden on mobile) */}
       {folders.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+        <div className="hidden md:flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
           <button
             type="button"
             onClick={() => {
@@ -186,6 +119,81 @@ export const ContactListView: React.FC = () => {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Active Filters Pill Bar (when filters or search are active) */}
+      {(activeFilterCount > 0 || Boolean(searchQuery.trim())) && (
+        <div className="flex items-center gap-1.5 flex-wrap p-2.5 rounded-2xl bg-theme-subtle border border-theme-primary/30 text-xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-theme-primary mr-1 flex items-center gap-1">
+            <SlidersHorizontal className="w-3 h-3" />
+            <span>Active:</span>
+          </span>
+
+          {searchQuery.trim() && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium">
+              <Search className="w-3 h-3 text-theme-primary" />
+              <span className="truncate max-w-[120px] sm:max-w-[200px]">"{searchQuery.trim()}"</span>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="hover:text-rose-500"
+                aria-label="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filterOptions.folderId !== null && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs">
+              <span>Label: {filterOptions.folderId === 'none' ? 'No Label' : folders.find(f => f.id === filterOptions.folderId)?.name || 'Folder'}</span>
+              <button
+                type="button"
+                onClick={() => updateFilterOptions({ folderId: null })}
+                className="hover:text-rose-500"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filterOptions.relationship !== null && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs">
+              <span>Tag: {filterOptions.relationship}</span>
+              <button
+                type="button"
+                onClick={() => updateFilterOptions({ relationship: null })}
+                className="hover:text-rose-500"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          {filterOptions.sortBy !== 'name-asc' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs">
+              <span>Sort: {filterOptions.sortBy}</span>
+              <button
+                type="button"
+                onClick={() => updateFilterOptions({ sortBy: 'name-asc' })}
+                className="hover:text-rose-500"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              resetFilterOptions();
+              setSearchQuery('');
+            }}
+            className="text-[11px] font-semibold text-rose-500 hover:underline ml-auto"
+          >
+            Clear all
+          </button>
         </div>
       )}
 

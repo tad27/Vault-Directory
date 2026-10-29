@@ -1,19 +1,16 @@
 import React, { useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../context/AppContext';
 import { PWAInstallButton } from './PWAInstallButton';
-import { ThemeColorPicker } from './ThemeColorPicker';
 import { Button } from './ui/button';
 import {
   Shield,
   Search,
   Plus,
   Lock,
-  Sun,
-  Moon,
   Menu,
   X,
   Sliders,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 interface Props {
@@ -26,11 +23,12 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
     searchQuery,
     setSearchQuery,
     settings,
-    toggleTheme,
     lockVault,
     setIsFormModalOpen,
     setContactToEdit,
     setIsSettingsModalOpen,
+    setIsFilterModalOpen,
+    activeFilterCount,
   } = useApp();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -99,8 +97,22 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
               </div>
             </div>
 
-            {/* Mobile Actions: PWA Install, Lock, Theme Switcher */}
+            {/* Mobile Actions: Search, Lock, Settings */}
             <div className="flex md:hidden items-center gap-1 shrink-0">
+              {/* Search button: Opens Filter & Search dialog */}
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(true)}
+                title="Search and filter contacts"
+                className="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-90 shrink-0"
+                aria-label="Search and filter contacts"
+              >
+                <Search className="w-5 h-5" />
+                {(Boolean(searchQuery.trim()) || activeFilterCount > 0) && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-theme-primary ring-2 ring-white dark:ring-slate-900" />
+                )}
+              </button>
+
               <PWAInstallButton />
 
               {settings.isLockEnabled && (
@@ -115,41 +127,23 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
                 </button>
               )}
 
-              {/* Accent Color Palette Switcher */}
-              <ThemeColorPicker variant="dropdown" />
-
-              {/* Theme Toggle Button */}
+              {/* Settings button on mobile header */}
               <button
                 type="button"
-                onClick={toggleTheme}
-                title={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-90 shrink-0 overflow-hidden"
-                aria-label={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                onClick={() => setIsSettingsModalOpen(true)}
+                title="Settings & Appearance"
+                className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-90 shrink-0"
+                aria-label="Settings & Appearance"
               >
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={settings.isDarkMode ? 'dark' : 'light'}
-                    initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
-                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                    exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex items-center justify-center"
-                  >
-                    {settings.isDarkMode ? (
-                      <Sun className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-                    ) : (
-                      <Moon className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-                    )}
-                  </motion.div>
-                </AnimatePresence>
+                <Sliders className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Center Search Bar: Full-width on mobile, auto-flex on desktop */}
-          <div className="w-full md:flex-1 md:max-w-xl md:mx-4 min-w-0">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+          {/* Desktop Search Bar & Filter Button: Hidden on mobile, flex on desktop */}
+          <div className="hidden md:flex md:flex-1 md:max-w-xl md:mx-4 min-w-0 items-center gap-2">
+            <div className="relative group flex-1 min-w-0">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-theme-primary transition-colors">
                 <Search className="w-4 h-4" />
               </div>
               <input
@@ -158,7 +152,7 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search contacts, phones, bank accounts..."
-                className="w-full pl-9 pr-9 py-2 rounded-xl text-base sm:text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 dark:focus:border-indigo-500 transition-all"
+                className="w-full pl-9 pr-9 py-2 rounded-xl text-base sm:text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-theme-primary/40 focus:border-theme-primary transition-all"
               />
               {searchQuery ? (
                 <button
@@ -177,6 +171,26 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
                 </div>
               )}
             </div>
+
+            {/* Filter Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsFilterModalOpen(true)}
+              title="Filter by labels, relationships & records"
+              className={`relative p-2 sm:p-2.5 rounded-xl border transition active:scale-95 shrink-0 flex items-center justify-center ${
+                activeFilterCount > 0
+                  ? 'bg-theme-subtle border-theme-primary text-theme-primary ring-2 ring-theme-primary/20'
+                  : 'border-slate-200/80 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              aria-label="Filter contacts"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-theme-primary text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Desktop Right Actions */}
@@ -207,41 +221,13 @@ export const Navbar: React.FC<Props> = ({ onToggleMobileMenu, isMobileMenuOpen }
               </button>
             )}
 
-            {/* Accent Color Palette Switcher */}
-            <ThemeColorPicker variant="dropdown" />
-
-            {/* Dark / Light Mode Toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shrink-0 overflow-hidden"
-              aria-label={settings.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={settings.isDarkMode ? 'dark' : 'light'}
-                  initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
-                  animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                  exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-center"
-                >
-                  {settings.isDarkMode ? (
-                    <Sun className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-                  ) : (
-                    <Moon className="w-4 h-4 text-slate-700 dark:text-slate-200" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </button>
-
             {/* Settings */}
             <button
               type="button"
               onClick={() => setIsSettingsModalOpen(true)}
-              title="Settings & Security"
+              title="Settings & Appearance"
               className="p-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 shrink-0"
+              aria-label="Settings & Appearance"
             >
               <Sliders className="w-4 h-4" />
             </button>
