@@ -38,6 +38,7 @@ export interface Contact {
   createdAt: number;
   updatedAt: number;
   lastInteractedAt?: number;
+  notionPageId?: string; // ID of the linked Notion page
 }
 
 export type InteractionType = 'call' | 'copy_bank' | 'copy_phone' | 'note';
@@ -53,6 +54,22 @@ export interface InteractionLog {
 
 export type ThemeColor = 'indigo' | 'emerald' | 'ocean' | 'amber' | 'rose' | 'purple' | 'slate';
 
+export interface NotionSyncConfig {
+  apiKey?: string;
+  databaseId?: string;
+  autoSync?: boolean;
+  lastSyncedAt?: number;
+}
+
+export interface NotionSyncResult {
+  success: boolean;
+  pushedCount: number;
+  pulledCount: number;
+  totalNotionRecords: number;
+  databaseTitle?: string;
+  error?: string;
+}
+
 export interface AppSettings {
   isDarkMode: boolean;
   themeColor: ThemeColor;
@@ -62,6 +79,7 @@ export interface AppSettings {
   autoLockMinutes: number; // 0 for immediately on blur/close, 5, 15, etc.
   useBiometrics: boolean;
   isEncryptedStorage: boolean;
+  notionConfig?: NotionSyncConfig;
 }
 
 export type FilterView = 'all' | 'favorites' | 'recents' | 'most_used' | 'folder' | 'activity' | 'analytics' | 'settings';

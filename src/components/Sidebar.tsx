@@ -14,6 +14,7 @@ import {
   Lock,
   ChevronRight,
   Palette,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Props {
@@ -32,6 +33,8 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
     setActiveFolderId,
     setIsFolderModalOpen,
     settings,
+    isSyncingNotion,
+    syncWithNotion,
   } = useApp();
 
   const handleSelectFilter = (filter: typeof activeFilter) => {
@@ -270,9 +273,34 @@ export const Sidebar: React.FC<Props> = ({ isMobile = false, onCloseMobile }) =>
         </div>
       )}
 
-      {/* Storage & Privacy Status Footer */}
-      <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
-        <div className="rounded-xl bg-slate-100/80 dark:bg-slate-800/60 p-3 border border-slate-200/60 dark:border-slate-800">
+      {/* Notion Database Sync Quick Action */}
+      <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80 space-y-2">
+        <div className="rounded-xl bg-slate-100/90 dark:bg-slate-800/80 p-2.5 border border-slate-200/80 dark:border-slate-700/80">
+          <div className="flex items-center justify-between gap-1 mb-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">Notion Database</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => syncWithNotion()}
+              disabled={isSyncingNotion}
+              className="px-2 py-0.5 rounded-lg bg-theme-primary text-white text-[10px] font-bold hover:opacity-90 active:scale-95 disabled:opacity-50 transition flex items-center gap-1 shrink-0 shadow-2xs"
+              title="Sync contacts with Notion"
+            >
+              <RefreshCw className={`w-2.5 h-2.5 ${isSyncingNotion ? 'animate-spin' : ''}`} />
+              <span>{isSyncingNotion ? 'Syncing...' : 'Sync'}</span>
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400 truncate">
+            {settings.notionConfig?.lastSyncedAt
+              ? `Synced ${new Date(settings.notionConfig.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : 'Ready to sync'}
+          </p>
+        </div>
+
+        {/* Storage & Privacy Status Footer */}
+        <div className="rounded-xl bg-slate-100/60 dark:bg-slate-800/40 p-2.5 border border-slate-200/50 dark:border-slate-800/60">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 mb-1">
             <HardDrive className="w-3.5 h-3.5 text-theme-primary" />
             <span>IndexedDB Active</span>

@@ -20,6 +20,8 @@ import {
   Sun,
   Moon,
   Palette,
+  ExternalLink,
+  Database,
 } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
@@ -37,6 +39,9 @@ export const SettingsModal: React.FC = () => {
     exportEncryptedVault,
     exportPlainVault,
     importVault,
+    isSyncingNotion,
+    syncWithNotion,
+    checkNotionStatus,
     showToast,
   } = useApp();
 
@@ -45,6 +50,10 @@ export const SettingsModal: React.FC = () => {
   const [pinConfirm, setPinConfirm] = useState('');
   const [pinError, setPinError] = useState('');
   const [isSettingPin, setIsSettingPin] = useState(false);
+
+  // Notion Sync states
+  const [isTestingNotion, setIsTestingNotion] = useState(false);
+  const [notionStatusMsg, setNotionStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Backup states
   const [backupPassword, setBackupPassword] = useState('');
@@ -89,6 +98,43 @@ export const SettingsModal: React.FC = () => {
     } else {
       await updateSettings({ useBiometrics: false });
       showToast('Biometrics disabled', 'info');
+    }
+  };
+
+  const handleSyncNotion = async () => {
+    setNotionStatusMsg(null);
+    const res = await syncWithNotion();
+    if (res.success) {
+      setNotionStatusMsg({
+        type: 'success',
+        text: `Sync completed! Uploaded ${res.pushedCount} contacts, imported ${res.pulledCount} from Notion.`,
+      });
+    } else {
+      setNotionStatusMsg({
+        type: 'error',
+        text: res.error || 'Failed to sync with Notion.',
+      });
+    }
+  };
+
+  const handleTestConnection = async () => {
+    setIsTestingNotion(true);
+    setNotionStatusMsg(null);
+    try {
+      const res = await checkNotionStatus();
+      if (res.ok) {
+        setNotionStatusMsg({
+          type: 'success',
+          text: `Connected to Notion! Database: "${res.title || 'New database'}"`,
+        });
+      } else {
+        setNotionStatusMsg({
+          type: 'error',
+          text: res.error || 'Connection failed.',
+        });
+      }
+    } finally {
+      setIsTestingNotion(false);
     }
   };
 
@@ -406,6 +452,94 @@ export const SettingsModal: React.FC = () => {
                   </button>
                 </div>
               </form>
+            )}
+          </div>
+
+          {/* Notion Cloud Database Sync */}
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-4 border border-slate-200/80 dark:border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-bold text-sm shadow-xs shrink-0 mt-0.5">
+                  N
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Notion Database Sync
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center gap-1.5 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Connected
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Sync directory contacts, phone numbers, and tags with your Notion workspace
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSyncNotion}
+                disabled={isSyncingNotion}
+                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-theme-primary text-white text-xs font-semibold hover:opacity-90 active:scale-95 disabled:opacity-50 transition flex items-center justify-center gap-2 shrink-0 shadow-xs"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingNotion ? 'animate-spin' : ''}`} />
+                <span>{isSyncingNotion ? 'Syncing...' : 'Sync with Notion'}</span>
+              </button>
+            </div>
+
+            {/* Sync summary bar */}
+            <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 truncate">
+                  Target Database: <span className="font-bold text-slate-900 dark:text-white">New database</span> <span className="font-mono text-[10px] text-slate-400">({settings.notionConfig?.databaseId || '40d711a3...'})</span>
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  {settings.notionConfig?.lastSyncedAt
+                    ? `Last synced: ${new Date(settings.notionConfig.lastSyncedAt).toLocaleDateString()} at ${new Date(settings.notionConfig.lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : 'Ready to sync — tap "Sync with Notion" to push & pull records.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={isTestingNotion}
+                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 transition active:scale-95"
+                >
+                  {isTestingNotion ? 'Testing...' : 'Test Connection'}
+                </button>
+
+                <a
+                  href={`https://notion.so/${settings.notionConfig?.databaseId || '40d711a3c12a800bac5de83c8ce8468a'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition"
+                  title="Open Database in Notion"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* Test or sync status banner */}
+            {notionStatusMsg && (
+              <div
+                className={`p-2.5 rounded-xl text-xs flex items-center gap-2 ${
+                  notionStatusMsg.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20'
+                    : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-500/20'
+                }`}
+              >
+                {notionStatusMsg.type === 'success' ? (
+                  <Check className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>{notionStatusMsg.text}</span>
+              </div>
             )}
           </div>
 

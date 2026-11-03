@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView, ThemeColor, ContactFilterOptions } from '../types';
+import type { Contact, PhoneNumber, BankAccount, Folder, InteractionLog, AppSettings, FilterView, ThemeColor, ContactFilterOptions, NotionSyncResult } from '../types';
 import { DEFAULT_FILTER_OPTIONS } from '../types';
 import * as db from '../services/db';
 import { SEED_CONTACTS, SEED_PHONES, SEED_BANKS, SEED_FOLDERS, SEED_INTERACTIONS } from '../services/seedData';
 import { hashPasscode, generateSalt, encryptObject, decryptObject, type EncryptedPayload } from '../services/crypto';
 import { verifyBiometricCredential, isBiometricsAvailable } from '../services/webauthn';
 import { applyThemeSmoothly } from '../lib/theme';
+import { executeNotionSync, testNotionConnection } from '../services/notionSync';
 
 interface ToastInfo {
   id: string;
@@ -93,6 +94,11 @@ interface AppContextType {
   exportEncryptedVault: (password: string) => Promise<string>;
   exportPlainVault: () => Promise<string>;
   importVault: (content: string, password?: string) => Promise<{ success: boolean; error?: string }>;
+
+  // Notion Sync
+  isSyncingNotion: boolean;
+  syncWithNotion: () => Promise<NotionSyncResult>;
+  checkNotionStatus: () => Promise<{ ok: boolean; title?: string; error?: string }>;
 
   // Feedback Toast
   toast: ToastInfo | null;
@@ -767,6 +773,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const [isSyncingNotion, setIsSyncingNotion] = useState(false);
+
+  const checkNotionStatus = async () => {
+    return testNotionConnection(settings.notionConfig);
+  };
+
+  const syncWithNotion = async (): Promise<NotionSyncResult> => {
+    setIsSyncingNotion(true);
+    try {
+      const result = await executeNotionSync(settings.notionConfig);
+      if (result.success) {
+        await refreshAllData();
+        showToast(
+          `Notion synced! ${result.pushedCount} uploaded, ${result.pulledCount} imported.`,
+          'success'
+        );
+      } else {
+        showToast(result.error || 'Failed to sync with Notion', 'warning');
+      }
+      return result;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error syncing with Notion';
+      showToast(msg, 'warning');
+      return {
+        success: false,
+        pushedCount: 0,
+        pulledCount: 0,
+        totalNotionRecords: 0,
+        error: msg,
+      };
+    } finally {
+      setIsSyncingNotion(false);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -828,6 +869,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         exportEncryptedVault,
         exportPlainVault,
         importVault,
+        isSyncingNotion,
+        syncWithNotion,
+        checkNotionStatus,
         toast,
         showToast,
       }}
