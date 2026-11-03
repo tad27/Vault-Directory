@@ -1,10 +1,13 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Load env file based on mode
+  const env = loadEnv(mode, process.cwd(), '');
+
   return {
     plugins: [
       react(),
@@ -63,6 +66,18 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      port: 3000,
+      proxy: {
+        '/notion-api': {
+          target: 'https://api.notion.com/v1',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/notion-api/, ''),
+          headers: {
+            Authorization: `Bearer ${env.VITE_NOTION_API_KEY}`,
+            'Notion-Version': '2022-06-28',
+          },
+        },
+      },
     },
   };
 });
