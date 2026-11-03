@@ -54,6 +54,9 @@ export const SettingsModal: React.FC = () => {
   // Notion Sync states
   const [isTestingNotion, setIsTestingNotion] = useState(false);
   const [notionStatusMsg, setNotionStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isEditingNotionKeys, setIsEditingNotionKeys] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState(settings.notionConfig?.apiKey || '');
+  const [customDbId, setCustomDbId] = useState(settings.notionConfig?.databaseId || '');
 
   // Backup states
   const [backupPassword, setBackupPassword] = useState('');
@@ -136,6 +139,19 @@ export const SettingsModal: React.FC = () => {
     } finally {
       setIsTestingNotion(false);
     }
+  };
+
+  const handleSaveNotionCredentials = async () => {
+    await updateSettings({
+      notionConfig: {
+        ...(settings.notionConfig || {}),
+        apiKey: customApiKey.trim() || undefined,
+        databaseId: customDbId.trim() || undefined,
+      },
+    });
+    showToast('Notion credentials saved', 'success');
+    setIsEditingNotionKeys(false);
+    handleTestConnection();
   };
 
   const triggerDownload = (content: string, filename: string) => {
@@ -541,6 +557,64 @@ export const SettingsModal: React.FC = () => {
                 <span>{notionStatusMsg.text}</span>
               </div>
             )}
+
+            {/* Collapsible Credentials Form */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setIsEditingNotionKeys(!isEditingNotionKeys)}
+                className="text-[11px] font-semibold text-theme-primary hover:underline flex items-center gap-1"
+              >
+                <span>{isEditingNotionKeys ? '▲ Hide Credentials Settings' : '▼ Configure / Override Notion API Key & Database ID'}</span>
+              </button>
+
+              {isEditingNotionKeys && (
+                <div className="mt-2.5 p-3 rounded-xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-3 animate-in fade-in text-xs">
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Notion Internal Integration Token (API Key)
+                    </label>
+                    <input
+                      type="password"
+                      value={customApiKey}
+                      onChange={e => setCustomApiKey(e.target.value)}
+                      placeholder="ntn_... (leave empty to use server/Vercel env variable)"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-theme-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300">
+                      Notion Database ID
+                    </label>
+                    <input
+                      type="text"
+                      value={customDbId}
+                      onChange={e => setCustomDbId(e.target.value)}
+                      placeholder="40d711a3c12a800bac5de83c8ce8468a"
+                      className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 font-mono text-xs focus:outline-none focus:ring-1 focus:ring-theme-primary"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingNotionKeys(false)}
+                      className="px-3 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveNotionCredentials}
+                      className="px-3.5 py-1.5 rounded-lg bg-theme-primary text-white font-semibold hover:opacity-90 active:scale-95 transition"
+                    >
+                      Save Credentials
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Section 2: Backup & Restore (JSON) */}

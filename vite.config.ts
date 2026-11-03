@@ -54,7 +54,46 @@ export default defineConfig(({ mode }) => {
           type: 'module',
         },
       }),
+      {
+        name: 'notion-api-dev-middleware',
+        configureServer(server) {
+          server.middlewares.use('/api/notion', async (req, res) => {
+            try {
+              process.env.NOTION_API_KEY = env.NOTION_API_KEY || env.VITE_NOTION_API_KEY || process.env.NOTION_API_KEY || '';
+              process.env.NOTION_DATABASE_ID = env.NOTION_DATABASE_ID || env.VITE_NOTION_DATABASE_ID || process.env.NOTION_DATABASE_ID || '';
+
+              if (req.method === 'POST') {
+                const chunks: any[] = [];
+                for await (const chunk of req) {
+                  chunks.push(chunk);
+                }
+                const bodyStr = Buffer.concat(chunks).toString();
+                try {
+                  (req as any).body = bodyStr ? JSON.parse(bodyStr) : {};
+                } catch {
+                  (req as any).body = {};
+                }
+              }
+
+              const { default: handler } = await import('./api/notion');
+              await handler(req, res);
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: false, error: err.message || 'Server error' }));
+            }
+          });
+        },
+      },
     ],
+    define: {
+      'import.meta.env.VITE_NOTION_API_KEY': JSON.stringify(
+        env.VITE_NOTION_API_KEY || env.NOTION_API_KEY || ''
+      ),
+      'import.meta.env.VITE_NOTION_DATABASE_ID': JSON.stringify(
+        env.VITE_NOTION_DATABASE_ID || env.NOTION_DATABASE_ID || ''
+      ),
+    },
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
@@ -73,7 +112,7 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/notion-api/, ''),
           headers: {
-            Authorization: `Bearer ${env.VITE_NOTION_API_KEY}`,
+            Authorization: `Bearer ${env.VITE_NOTION_API_KEY || env.NOTION_API_KEY}`,
             'Notion-Version': '2022-06-28',
           },
         },
